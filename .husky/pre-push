@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-push hooks..."
+echo "Running linting..."
+yarn run lint
+
+echo "Running test.."
+# yarn run test:ci
