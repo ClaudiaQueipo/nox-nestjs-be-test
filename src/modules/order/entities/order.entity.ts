@@ -1,5 +1,5 @@
-import { Client } from 'src/client/entities/client.entity'
-import { Restaurant } from 'src/restaurant/entities/restaurant.entity'
+import { Client } from '@modules/client/entities/client.entity'
+import { Restaurant } from '@modules/restaurant/entities/restaurant.entity'
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity('orders')

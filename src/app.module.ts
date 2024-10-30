@@ -3,10 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { ClientModule } from './client/client.module'
-import { RestaurantModule } from './restaurant/restaurant.module'
-import { OrderModule } from './order/order.module'
+import { RestaurantModule } from './modules/restaurant/restaurant.module'
+import { OrderModule } from './modules/order/order.module'
 import config from './config'
+import { ClientModule } from '@modules/client/client.module'
 
 @Module({
   imports: [
