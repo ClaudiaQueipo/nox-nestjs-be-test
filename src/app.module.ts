@@ -1,12 +1,12 @@
+import { AuthModule } from '@modules/auth/auth.module'
+import { ClientModule } from '@modules/client/client.module'
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { RestaurantModule } from './modules/restaurant/restaurant.module'
-import { OrderModule } from './modules/order/order.module'
 import config from './config'
-import { ClientModule } from '@modules/client/client.module'
+import { OrderModule } from './modules/order/order.module'
+import { RestaurantModule } from './modules/restaurant/restaurant.module'
 
 @Module({
   imports: [
@@ -14,18 +14,7 @@ import { ClientModule } from '@modules/client/client.module'
       load: [config],
       isGlobal: true
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: (configService) => ({
-        type: 'postgres',
-        host: configService.get('database.host'),
-        port: configService.get('database.port'),
-        username: configService.get('database.username'),
-        password: configService.get('database.password'),
-        database: configService.get('database.database'),
-        synchronize: true
-      }),
-      inject: [ConfigService]
-    }),
+    AuthModule,
     ClientModule,
     RestaurantModule,
     OrderModule
