@@ -3,12 +3,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle('API')
-    .setDescription('Descripción de la API')
-    .setVersion('1.0')
+    .setTitle('Nox Creation Backend Test Restaurant API')
+    .setDescription(
+      'Esta es una API para gestionar restaurantes,ordenes y clientes.'
+    )
+    .setVersion('0.1')
     .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, document)
+  SwaggerModule.setup('api-docs', app, document)
 }

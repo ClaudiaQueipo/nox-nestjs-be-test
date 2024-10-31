@@ -1,3 +1,4 @@
+import { Restaurant } from '@modules/restaurant/entities/restaurant.entity'
 import {
   IsEmail,
   IsInt,
@@ -10,6 +11,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
@@ -36,6 +38,9 @@ export class Client {
   @Min(0, { message: 'Age cannot be less than 0.' })
   @Max(120, { message: 'Age cannot be greater than 120.' })
   age: number
+
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.clients)
+  restaurant: Restaurant
 
   @CreateDateColumn()
   createdAt: Date
