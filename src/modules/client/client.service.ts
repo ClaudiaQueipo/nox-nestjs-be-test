@@ -10,6 +10,7 @@ import { Repository } from 'typeorm'
 import { CreateClientDto } from './dto/create-client.dto'
 import { UpdateClientDto } from './dto/update-client.dto'
 import { Client } from './entities/client.entity'
+import { TClientResponse } from './types/get-all-response'
 
 @Injectable()
 export class ClientService {
@@ -33,8 +34,64 @@ export class ClientService {
     }
   }
 
-  async findAll(): Promise<Client[]> {
-    return this.handleRepositoryOperation(() => this.clientRepository.find())
+  async findAll(
+    search?: { name?: string; email?: string; phone?: string; age?: number },
+    page: number = 1,
+    limit: number = 10
+  ): Promise<TClientResponse> {
+    const queryBuilder = this.clientRepository.createQueryBuilder('client')
+
+    const searchFields = {
+      name: 'client.name',
+      email: 'client.email',
+      phone: 'client.phone',
+      age: 'client.age'
+    }
+
+    if (search) {
+      const conditions = Object.keys(search)
+        .filter((key) => searchFields[key] && search[key] !== undefined)
+        .map((key) => {
+          const value = search[key]
+          if (typeof value === 'string') {
+            return `${searchFields[key]} LIKE :${key}`
+          } else if (typeof value === 'number') {
+            return `${searchFields[key]} = :${key}`
+          }
+          return ''
+        })
+        .filter(Boolean)
+        .join(' OR ')
+
+      const parameters = Object.keys(search).reduce((acc, key) => {
+        acc[key] =
+          typeof search[key] === 'string' ? `%${search[key]}%` : search[key]
+        return acc
+      }, {})
+
+      queryBuilder.where(conditions, parameters)
+    }
+
+    const offset = (page - 1) * limit
+    if (offset < 0) {
+      throw new Error('Page must be greater than or equal to 1')
+    }
+
+    if (limit <= 0) {
+      throw new Error('Limit must be greater than zero')
+    }
+
+    const [clients, total] = await queryBuilder
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount()
+
+    return {
+      data: clients,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit)
+    }
   }
 
   async findOne(id: string): Promise<Client> {

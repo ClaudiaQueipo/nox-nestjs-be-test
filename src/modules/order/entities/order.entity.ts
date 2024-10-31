@@ -1,7 +1,14 @@
 import { Client } from '@modules/client/entities/client.entity'
 import { Restaurant } from '@modules/restaurant/entities/restaurant.entity'
 import { IsNotEmpty, IsString } from 'class-validator'
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm'
 
 @Entity('orders')
 export class Order {
