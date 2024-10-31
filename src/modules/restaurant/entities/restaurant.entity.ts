@@ -1,6 +1,13 @@
 import { Client } from '@modules/client/entities/client.entity'
 import { IsInt, IsNotEmpty, IsString, MaxLength, Min } from 'class-validator'
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm'
 
 @Entity()
 export class Restaurant {
@@ -39,4 +46,10 @@ export class Restaurant {
     this.clients.push(client)
     return true
   }
+
+  @CreateDateColumn()
+  createdAt: Date
+
+  @UpdateDateColumn()
+  updatedAt: Date
 }

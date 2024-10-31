@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards
 } from '@nestjs/common'
 import {
@@ -14,6 +15,7 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags
 } from '@nestjs/swagger'
@@ -44,19 +46,64 @@ export class ClientController {
     return this.clientService.create(createClientDto)
   }
 
+  @Get()
   @ApiOperation({
     summary: 'Get all clients',
-    description: 'Retrieves a list of all clients.'
+    description:
+      'Retrieves a list of all clients with optional search and pagination.'
   })
   @ApiResponse({
     status: 200,
     description: 'List of clients retrieved successfully.'
   })
-  @Get()
-  findAll() {
-    return this.clientService.findAll()
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    description: 'name term for filtering clients.'
+  })
+  @ApiQuery({
+    name: 'email',
+    required: false,
+    description: 'email term for filtering clients.'
+  })
+  @ApiQuery({
+    name: 'phone',
+    required: false,
+    description: 'age term for filtering clients.'
+  })
+  @ApiQuery({
+    name: 'age',
+    required: false,
+    description: 'age term for filtering clients.'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number for pagination.',
+    type: Number
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of clients per page.',
+    type: Number
+  })
+  findAll(
+    @Query('name') name?: string,
+    @Query('email') email?: string,
+    @Query('phone') phone?: string,
+    @Query('age') age?: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10
+  ) {
+    const search = {
+      ...(name && { name }),
+      ...(email && { email }),
+      ...(phone && { phone }),
+      ...(age !== undefined && { age })
+    }
+    return this.clientService.findAll(search, page, limit)
   }
-
   @ApiOperation({
     summary: 'Get one client by ID',
     description: 'Retrieves a client by its ID.'
