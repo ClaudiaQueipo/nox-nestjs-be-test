@@ -1,4 +1,4 @@
-import { JwtAuthGuard } from '@modules/auth/jwt-auth.guard'
+import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard'
 import {
   Body,
   Controller,
@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards
 } from '@nestjs/common'
 import {
@@ -15,12 +16,14 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags
 } from '@nestjs/swagger'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
 import { RestaurantService } from './restaurant.service'
+import { TRestaurantResponse } from './types/get-all-response.type'
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
@@ -82,17 +85,57 @@ export class RestaurantController {
     )
   }
 
+  @Get()
   @ApiOperation({
     summary: 'Get all restaurants',
-    description: 'Retrieves a list of all restaurants.'
+    description:
+      'Retrieves a list of all restaurants with optional search and pagination.'
   })
   @ApiResponse({
     status: 200,
     description: 'List of restaurants retrieved successfully.'
   })
-  @Get()
-  async findAll() {
-    return await this.restaurantService.findAll()
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    description: 'Name term for filtering restaurants.'
+  })
+  @ApiQuery({
+    name: 'address',
+    required: false,
+    description: 'Address term for filtering restaurants.'
+  })
+  @ApiQuery({
+    name: 'capacity',
+    required: false,
+    description: 'Capacity term for filtering restaurants.'
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number for pagination.',
+    type: Number
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of restaurants per page.',
+    type: Number
+  })
+  async findAll(
+    @Query('name') name?: string,
+    @Query('address') address?: string,
+    @Query('capacity') capacity?: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10
+  ): Promise<TRestaurantResponse> {
+    const search = {
+      ...(name && { name }),
+      ...(address && { address }),
+      ...(capacity !== undefined && { capacity })
+    }
+
+    return this.restaurantService.findAll(search, page, limit)
   }
 
   @ApiOperation({

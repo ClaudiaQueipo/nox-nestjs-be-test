@@ -35,7 +35,12 @@ export class ClientService {
   }
 
   async findAll(
-    search?: { name?: string; email?: string; phone?: string; age?: number },
+    search?: {
+      name?: string
+      email?: string
+      phone?: string
+      age?: number
+    },
     page: number = 1,
     limit: number = 10
   ): Promise<TClientResponse> {
@@ -69,10 +74,13 @@ export class ClientService {
         return acc
       }, {})
 
-      queryBuilder.where(conditions, parameters)
+      if (conditions) {
+        queryBuilder.where(conditions, parameters)
+      }
     }
 
     const offset = (page - 1) * limit
+
     if (offset < 0) {
       throw new Error('Page must be greater than or equal to 1')
     }
@@ -81,19 +89,23 @@ export class ClientService {
       throw new Error('Limit must be greater than zero')
     }
 
-    const [clients, total] = await queryBuilder
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount()
+    try {
+      const [clients, total] = await queryBuilder
+        .skip(offset)
+        .take(limit)
+        .getManyAndCount()
 
-    return {
-      data: clients,
-      total,
-      page,
-      lastPage: Math.ceil(total / limit)
+      return {
+        data: clients,
+        total,
+        page,
+        lastPage: Math.ceil(total / limit)
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+      throw new Error('Could not fetch clients')
     }
   }
-
   async findOne(id: string): Promise<Client> {
     return this.handleRepositoryOperation(
       () => this.clientRepository.findOneBy({ id }),
