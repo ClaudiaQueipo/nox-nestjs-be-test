@@ -6,13 +6,15 @@ import {
   NotFoundException,
   Param,
   Patch,
-  Post
+  Post,
+  Query
 } from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags
 } from '@nestjs/swagger'
@@ -20,6 +22,7 @@ import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto } from './dto/update-order.dto'
 import { Order } from './entities/order.entity'
 import { OrderService } from './order.service'
+import { TOrderResponse } from './types/get-all-response.type'
 
 @ApiBearerAuth()
 @ApiTags('ORDER')
@@ -43,18 +46,59 @@ export class OrderController {
     return this.ordersService.create(createOrderDto)
   }
 
+  @Get()
   @ApiOperation({
     summary: 'Get all orders',
-    description: 'Retrieves a list of all orders.'
+    description:
+      'Retrieves a list of all orders with optional search and pagination.'
   })
   @ApiResponse({
     status: 200,
     description: 'List of orders retrieved successfully.',
     type: [Order]
   })
-  @Get()
-  async findAll(): Promise<Order[]> {
-    return this.ordersService.findAll()
+  @ApiQuery({
+    name: 'clientName',
+    required: false,
+    description: 'Client name term for filtering orders.'
+  })
+  @ApiQuery({
+    name: 'restaurantName',
+    required: false,
+    description: 'Restaurant name term for filtering orders.'
+  })
+  @ApiQuery({
+    name: 'totalAmount',
+    required: false,
+    description: 'Total amount term for filtering orders.',
+    type: Number
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number for pagination.',
+    type: Number
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of orders per page.',
+    type: Number
+  })
+  async findAll(
+    @Query('clientName') clientName?: string,
+    @Query('restaurantName') restaurantName?: string,
+    @Query('totalAmount') totalAmount?: number,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10
+  ): Promise<TOrderResponse> {
+    const search = {
+      ...(clientName && { clientName }),
+      ...(restaurantName && { restaurantName }),
+      ...(totalAmount !== undefined && { totalAmount })
+    }
+
+    return this.ordersService.findAll(search, page, limit)
   }
 
   @ApiOperation({
