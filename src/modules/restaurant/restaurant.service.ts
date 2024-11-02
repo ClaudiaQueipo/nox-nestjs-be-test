@@ -1,5 +1,4 @@
 import { Client } from '@modules/client/entities/client.entity'
-import { LoggerService } from '@modules/logger/logger.service'
 import {
   BadRequestException,
   Inject,
@@ -7,6 +6,7 @@ import {
   InternalServerErrorException,
   NotFoundException
 } from '@nestjs/common'
+import { LoggerService } from 'src/core/logger/logger.service'
 import { Repository } from 'typeorm'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'

@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config'
+import { join } from 'path'
 import { DataSource } from 'typeorm'
 
 export const databaseProvider = [
@@ -12,7 +13,7 @@ export const databaseProvider = [
         username: configService.get('app_config.db_username'),
         password: configService.get('app_config.db_password'),
         database: configService.get('app_config.db_database'),
-        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+        entities: [join(__dirname, '../../**/*.entity{.ts,.js}')],
         synchronize: true
       })
 

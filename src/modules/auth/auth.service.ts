@@ -1,4 +1,3 @@
-import { LoggerService } from '@modules/logger/logger.service'
 import {
   BadRequestException,
   Inject,
@@ -7,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
+import { LoggerService } from 'src/core/logger/logger.service'
 import { Repository } from 'typeorm'
 import { LoginDto } from './dto/login-auth.dto'
 import { RegisterDto } from './dto/register-auth.dto'
