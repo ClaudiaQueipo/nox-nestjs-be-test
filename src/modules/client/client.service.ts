@@ -1,3 +1,4 @@
+import { LoggerService } from '@modules/logger/logger.service'
 import {
   BadRequestException,
   Inject,
@@ -16,7 +17,8 @@ import { TClientResponse } from './types/get-all-response'
 export class ClientService {
   constructor(
     @Inject('CLIENT_REPOSITORY')
-    private readonly clientRepository: Repository<Client>
+    private readonly clientRepository: Repository<Client>,
+    private readonly logger: LoggerService
   ) {}
 
   async create(createClientDto: CreateClientDto): Promise<Client> {
@@ -26,11 +28,13 @@ export class ClientService {
       this.checkAge(clientOrErrors.age)
       return this.saveClient(clientOrErrors)
     } else {
-      throw new BadRequestException({
+      const error = {
         statusCode: 400,
         message: 'Validation failed',
         errors: clientOrErrors
-      })
+      }
+      this.logger.error(String(error))
+      throw new BadRequestException(error)
     }
   }
 
@@ -82,11 +86,15 @@ export class ClientService {
     const offset = (page - 1) * limit
 
     if (offset < 0) {
-      throw new Error('Page must be greater than or equal to 1')
+      const error = 'Page must be greater than or equal to 1'
+      this.logger.error(error)
+      throw new Error(error)
     }
 
     if (limit <= 0) {
-      throw new Error('Limit must be greater than zero')
+      const error = 'Limit must be greater than zero'
+      this.logger.error(error)
+      throw new Error(error)
     }
 
     try {
@@ -102,15 +110,22 @@ export class ClientService {
         lastPage: Math.ceil(total / limit)
       }
     } catch (error) {
-      console.error('Error fetching clients:', error)
-      throw new Error('Could not fetch clients')
+      this.logger.error(error)
+      throw new Error('Could not fetch clients see logs for more details')
     }
   }
+
   async findOne(id: string): Promise<Client> {
-    return this.handleRepositoryOperation(
-      () => this.clientRepository.findOneBy({ id }),
-      id
-    )
+    try {
+      const client = await this.clientRepository.findOne({ where: { id } })
+      if (!client) {
+        throw new NotFoundException(`Client with ID ${id} not found`)
+      }
+      return client
+    } catch (error) {
+      this.logger.error(error)
+      throw new BadRequestException(error)
+    }
   }
 
   async update(id: string, updateClientDto: UpdateClientDto): Promise<Client> {
@@ -121,11 +136,13 @@ export class ClientService {
       Object.assign(existingClient, clientOrErrors)
       return this.saveClient(existingClient)
     } else {
-      throw new BadRequestException({
+      const error = {
         statusCode: 400,
         message: 'Validation failed',
         errors: clientOrErrors
-      })
+      }
+      this.logger.error(String(error))
+      throw new BadRequestException(error)
     }
   }
 
@@ -154,7 +171,9 @@ export class ClientService {
     const client = await this.clientRepository.findOneBy({ id })
 
     if (!client) {
-      throw new NotFoundException(`Client with ID ${id} not found`)
+      const errorMessage = `Client with ID ${id} not found`
+      this.logger.error(errorMessage)
+      throw new NotFoundException(errorMessage)
     }
 
     return client
@@ -162,9 +181,9 @@ export class ClientService {
 
   private checkAge(age: number): void {
     if (age < 18) {
-      throw new BadRequestException(
-        'Only clients over the age of 18 can be registered.'
-      )
+      const errorMessage = 'Only clients over the age of 18 can be registered.'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
   }
 
@@ -172,24 +191,9 @@ export class ClientService {
     try {
       return await this.clientRepository.save(client)
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Could not save client: ${error.message}`
-      )
-    }
-  }
-
-  private async handleRepositoryOperation<T>(
-    operation: () => Promise<T>,
-    id?: string
-  ): Promise<T> {
-    try {
-      return await operation()
-    } catch (error) {
-      throw new InternalServerErrorException(
-        id
-          ? `Could not retrieve client with ID ${id}: ${error.message}`
-          : `Could not retrieve clients: ${error.message}`
-      )
+      const errorMessage = `Could not save client: ${error.message}`
+      this.logger.error(errorMessage)
+      throw new InternalServerErrorException(errorMessage)
     }
   }
 }

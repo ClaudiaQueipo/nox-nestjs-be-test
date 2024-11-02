@@ -1,6 +1,12 @@
 import { Client } from '@modules/client/entities/client.entity'
+import { LoggerService } from '@modules/logger/logger.service'
 import { Restaurant } from '@modules/restaurant/entities/restaurant.entity'
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { Repository } from 'typeorm'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto } from './dto/update-order.dto'
@@ -15,10 +21,15 @@ export class OrderService {
     @Inject('CLIENT_REPOSITORY')
     private readonly clientRepository: Repository<Client>,
     @Inject('RESTAURANT_REPOSITORY')
-    private readonly restaurantRepository: Repository<Restaurant>
+    private readonly restaurantRepository: Repository<Restaurant>,
+    private readonly logger: LoggerService
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    this.logger.log(
+      `Creating order for client ID ${createOrderDto.clientId} at restaurant ID ${createOrderDto.restaurantId}`
+    )
+
     const client = await this.clientRepository.findOneBy({
       id: createOrderDto.clientId
     })
@@ -27,7 +38,9 @@ export class OrderService {
     })
 
     if (!client || !restaurant) {
-      throw new Error('Client or Restaurant not found')
+      const errorMessage = 'Client or Restaurant not found'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
 
     const order = this.orderRepository.create({
@@ -36,7 +49,10 @@ export class OrderService {
       restaurant
     })
 
-    return this.orderRepository.save(order)
+    const savedOrder = await this.orderRepository.save(order)
+    this.logger.log(`Order created successfully with ID ${savedOrder.id}`)
+
+    return savedOrder
   }
 
   async findAll(
@@ -48,6 +64,10 @@ export class OrderService {
     page: number = 1,
     limit: number = 10
   ): Promise<TOrderResponse> {
+    this.logger.log(
+      `Fetching orders with search parameters: ${JSON.stringify(search)}`
+    )
+
     const queryBuilder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.client', 'client')
@@ -101,6 +121,8 @@ export class OrderService {
         .take(limit)
         .getManyAndCount()
 
+      this.logger.log(`Fetched ${orders.length} orders successfully`)
+
       return {
         data: orders,
         total,
@@ -108,31 +130,50 @@ export class OrderService {
         lastPage: Math.ceil(total / limit)
       }
     } catch (error) {
-      console.error('Error fetching orders:', error)
+      this.logger.error('Error fetching orders:', error)
       throw new Error('Could not fetch orders')
     }
   }
 
   async findOne(id: string): Promise<Order> {
+    this.logger.log(`Fetching order with ID ${id}`)
+
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['client', 'restaurant']
     })
-    if (!order) throw new NotFoundException(`Order with ID ${id} not found`)
+
+    if (!order) {
+      this.logger.warn(`Order with ID ${id} not found`)
+      throw new NotFoundException(`Order with ID ${id} not found`)
+    }
+
     return order
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
+    this.logger.log(`Updating order with ID ${id}`)
+
     const order = await this.findOne(id)
+
     if (updateOrderDto.description) {
       order.description = updateOrderDto.description
+      this.logger.log(`Updated description for order ID ${id}`)
     }
+
     return this.orderRepository.save(order)
   }
 
   async remove(id: string): Promise<void> {
+    this.logger.log(`Removing order with ID ${id}`)
+
     const result = await this.orderRepository.delete(id)
-    if (result.affected === 0)
+
+    if (result.affected === 0) {
+      this.logger.warn(`Attempted to remove non-existent order with ID ${id}`)
       throw new NotFoundException(`Order with ID ${id} not found`)
+    }
+
+    this.logger.log(`Successfully removed order with ID ${id}`)
   }
 }

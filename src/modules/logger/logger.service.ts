@@ -10,7 +10,7 @@ export class LoggerService {
 
   constructor() {
     const logDir = path.join(process.cwd(), 'logs')
-    console.log(logDir)
+
     this.createLogDirectory(logDir)
 
     const fileTransport = new winston.transports.DailyRotateFile({
