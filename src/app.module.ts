@@ -12,6 +12,7 @@ import { RestaurantModule } from './modules/restaurant/restaurant.module'
   imports: [
     ConfigModule.forRoot({
       load: [config],
+      envFilePath: '.env.dev',
       isGlobal: true
     }),
     AuthModule,
