@@ -1,6 +1,6 @@
-import { DatabaseModule } from '@modules/database/database.module'
-import { LoggerService } from '@modules/logger/logger.service'
 import { Module } from '@nestjs/common'
+import { DatabaseModule } from 'src/core/database/database.module'
+import { LoggerService } from 'src/core/logger/logger.service'
 import { ClientController } from './client.controller'
 import { ClientProvider } from './client.provider'
 import { ClientService } from './client.service'
