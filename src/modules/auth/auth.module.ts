@@ -1,4 +1,5 @@
 import { DatabaseModule } from '@modules/database/database.module'
+import { LoggerService } from '@modules/logger/logger.service'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
@@ -23,7 +24,13 @@ import { UserProvider } from './user.provider'
       inject: [ConfigService]
     })
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, ...UserProvider],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    ...UserProvider,
+    LoggerService
+  ],
   controllers: [AuthController]
 })
 export class AuthModule {}

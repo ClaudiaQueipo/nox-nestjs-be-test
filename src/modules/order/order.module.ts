@@ -1,6 +1,7 @@
 import { ClientModule } from '@modules/client/client.module'
 import { ClientProvider } from '@modules/client/client.provider'
 import { DatabaseModule } from '@modules/database/database.module'
+import { LoggerService } from '@modules/logger/logger.service'
 import { RestaurantModule } from '@modules/restaurant/restaurant.module'
 import { RestaurantProvider } from '@modules/restaurant/restaurant.provider'
 import { Module } from '@nestjs/common'
@@ -15,7 +16,8 @@ import { OrderService } from './order.service'
     OrderService,
     ...OrderProvider,
     ...RestaurantProvider,
-    ...ClientProvider
+    ...ClientProvider,
+    LoggerService
   ]
 })
 export class OrderModule {}

@@ -1,3 +1,4 @@
+import { LoggerService } from '@modules/logger/logger.service'
 import {
   BadRequestException,
   Inject,
@@ -16,7 +17,8 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     @Inject('USER_REPOSITORY')
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    private readonly logger: LoggerService
   ) {}
 
   async validateUser(username: string, password: string): Promise<User | null> {
@@ -31,9 +33,10 @@ export class AuthService {
   async login(user: LoginDto) {
     const validUser = await this.validateUser(user.username, user.password)
     if (!validUser) {
-      throw new NotFoundException(
+      const errorMessage =
         'Invalid credentials: Check your username and password or Sign up in the application'
-      )
+      this.logger.error(errorMessage)
+      throw new NotFoundException(errorMessage)
     }
 
     const payload = { id: validUser.id, username: validUser.username }
@@ -48,7 +51,9 @@ export class AuthService {
     })
 
     if (existingUser) {
-      throw new BadRequestException('User already exists')
+      const errorMessage = 'User already exists'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -69,7 +74,9 @@ export class AuthService {
       const decoded = this.jwtService.verify(token)
       return { id: decoded.id, username: decoded.username, password: '' }
     } catch (error) {
-      throw new BadRequestException(`Invalid token, ${error}`)
+      const errorMessage = `Invalid token, ${error}`
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
   }
 }

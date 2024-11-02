@@ -1,4 +1,5 @@
 import { Client } from '@modules/client/entities/client.entity'
+import { LoggerService } from '@modules/logger/logger.service'
 import {
   BadRequestException,
   Inject,
@@ -18,7 +19,8 @@ export class RestaurantService {
     @Inject('RESTAURANT_REPOSITORY')
     private readonly restaurantRepository: Repository<Restaurant>,
     @Inject('CLIENT_REPOSITORY')
-    private readonly clientRepository: Repository<Client>
+    private readonly clientRepository: Repository<Client>,
+    private readonly logger: LoggerService
   ) {}
 
   async create(createRestaurantDto: CreateRestaurantDto): Promise<Restaurant> {
@@ -73,11 +75,15 @@ export class RestaurantService {
     const offset = (page - 1) * limit
 
     if (offset < 0) {
-      throw new Error('Page must be greater than or equal to 1')
+      const error = 'Page must be greater than or equal to 1'
+      this.logger.error(error)
+      throw new Error(error)
     }
 
     if (limit <= 0) {
-      throw new Error('Limit must be greater than zero')
+      const error = 'Limit must be greater than zero'
+      this.logger.error(error)
+      throw new Error(error)
     }
 
     try {
@@ -93,7 +99,7 @@ export class RestaurantService {
         lastPage: Math.ceil(total / limit)
       }
     } catch (error) {
-      console.error('Error fetching restaurants:', error)
+      this.logger.error('Error fetching restaurants:', error)
       throw new Error('Could not fetch restaurants')
     }
   }
@@ -103,9 +109,13 @@ export class RestaurantService {
       where: { id },
       relations: ['clients']
     })
+
     if (!restaurant) {
-      throw new NotFoundException(`Restaurant with ID ${id} not found`)
+      const errorMessage = `Restaurant with ID ${id} not found`
+      this.logger.error(errorMessage)
+      throw new NotFoundException(errorMessage)
     }
+
     return restaurant
   }
 
@@ -115,12 +125,15 @@ export class RestaurantService {
   ): Promise<Restaurant> {
     const restaurant = await this.findOne(id)
     Object.assign(restaurant, updateRestaurantDto)
+
     return await this.saveRestaurant(restaurant)
   }
 
   async remove(id: string): Promise<{ message: string }> {
     const restaurant = await this.findOne(id)
+
     await this.restaurantRepository.remove(restaurant)
+
     return { message: `Restaurant with ID ${id} has been removed` }
   }
 
@@ -129,26 +142,35 @@ export class RestaurantService {
     clientId: string
   ): Promise<Restaurant> {
     const restaurant = await this.findOne(restaurantId)
+
     const client = await this.clientRepository.findOneBy({ id: clientId })
 
     if (!client) {
-      throw new NotFoundException(`Client with ID ${clientId} not found`)
+      const errorMessage = `Client with ID ${clientId} not found`
+      this.logger.error(errorMessage)
+      throw new NotFoundException(errorMessage)
     }
 
     if (restaurant.clients.length >= restaurant.capacity) {
-      throw new BadRequestException('Maximum capacity reached')
+      const errorMessage = 'Maximum capacity reached'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
+
     if (restaurant.clients.map((c) => c.id).includes(client.id)) {
-      throw new BadRequestException(
-        'This client is already registered in the restaurant'
-      )
+      const errorMessage = 'This client is already registered in the restaurant'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
 
     if (client.age < 18) {
-      throw new BadRequestException('Only adults are allowed')
+      const errorMessage = 'Only adults are allowed'
+      this.logger.error(errorMessage)
+      throw new BadRequestException(errorMessage)
     }
 
     restaurant.clients.push(client)
+
     return await this.saveRestaurant(restaurant)
   }
 
@@ -156,9 +178,9 @@ export class RestaurantService {
     try {
       return await this.restaurantRepository.save(restaurant)
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Could not save restaurant: ${error.message}`
-      )
+      const errorMessage = `Could not save restaurant: ${error.message}`
+      this.logger.error(errorMessage)
+      throw new InternalServerErrorException(errorMessage)
     }
   }
 }
